@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+<!--
+Copyright 2005-2012 Alfresco Software Limited.
+ 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+This file is part of an unsupported extension to Alfresco.
+-->
+<plugin name="alfresco-enterprise">
+   <classpath>
+      <include name="pdk/lib/mx4j" />
+   </classpath>
+   <filter name="template" value="${OBJECT_NAME}:${alias}" />
+   <filter name="CurrentRepo" value="Alfresco:Name=RepositoryDescriptor,Type=Current" />
+   <filter name="InstalledRepo" value="Alfresco:Name=RepositoryDescriptor,Type=Installed" />
+   <filter name="License" value="Alfresco:Name=LicenseDescriptor" />
+   <filter name="Database" value="Alfresco:Name=DatabaseInformation" />
+   <filter name="RepoServerMgmt" value="Alfresco:Name=RepoServerMgmt" />
+   <filter name="Authority" value="Alfresco:Name=Authority" />
+   <filter name="Runtime" value="Alfresco:Name=Runtime" />
+   <server name="Alfresco Enterprise" description="Alfresco Enterprise Server">
+      <config>
+         <option name="jmx.url" description="JMX URL to MBeanServer"
+            default="service:jmx:rmi://localhost/jndi/rmi://localhost:50500/alfresco/jmxrmi" />
+         <option name="jmx.username" description="JMX username" optional="true" />
+         <option name="jmx.password" description="JMX password" optional="true" type="secret" />
+         <option name="process.query" description="Default PTQL for this Alfresco instance"
+            default="State.Name.eq=java,Args.*.sw=-Dalfresco.home=" />
+      </config>
+      <property name="AUTOINVENTORY_NAME" value="Alfresco Enterprise Server: %alfresco.home%" />
+      <property name="PROC_HOME_PROPERTY" value="alfresco.home" />
+      <property name="DEFAULT_LOG_FILE" value="alfresco.log" />
+      <property name="OBJECT_NAME" value="Alfresco:Name=RepositoryDescriptor,Type=Server" />
+      <plugin type="autoinventory" class="org.hyperic.hq.product.jmx.MxServerDetector" />
+      <plugin type="measurement" class="org.hyperic.hq.product.jmx.MxMeasurementPlugin" />
+      <plugin type="log_track" class="org.hyperic.hq.product.Log4JLogTrackPlugin" />
+      <plugin type="config_track" class="org.hyperic.hq.product.ConfigFileTrackPlugin" />
+      <plugin type="control" class="org.hyperic.hq.product.jmx.MxControlPlugin" />
+      <plugin type="livedata" class="org.hyperic.hq.product.jmx.MxLiveDataPlugin" />
+      <actions include="invalidateTicketsExpired,invalidateTicketsAll,invalidateUser" />
+      <properties>
+         <property name="Edition" description="Alfresco Edition" />
+         <property name="VersionNumber" description="Version" />
+         <property name="VersionBuild" description="Build Number" />
+         <property name="Name" description="Repository Name" />
+         <property name="${CurrentRepo}:Id" description="Repository UID" />
+         <property name="Schema" description="Schema Number" />
+         <property name="${InstalledRepo}:VersionNumber" description="Originally Installed Version" />
+         <property name="${InstalledRepo}:Schema" description="Originally Installed Schema Number" />
+         <property name="${License}:Holder" description="Licensed To" />
+         <property name="${License}:Issued" description="License Issue Date" />
+         <property name="${License}:ValidUntil" description="License Valid Until Date" />
+         <property name="${License}:Days" description="License Duration in Days" />
+         <property name="${RepoServerMgmt}:ReadOnly" description="Read Only?" />
+         <property name="${RepoServerMgmt}:SingleUserOnly" description="Single User Only?" />
+         <property name="${RepoServerMgmt}:LinkValidationDisabled" description="Link Validation Disabled?" />
+      </properties>
+      <metric name="Availability" indicator="true" />
+      <metric name="License Remaining Days" indicator="true" template="${License}:RemainingDays" />
+      <metric name="Unexpired Ticket Count" indicator="true" template="${RepoServerMgmt}:TicketCountNonExpired" />
+      <metric name="Total Ticket Count" indicator="true" template="${RepoServerMgmt}:TicketCountAll" />
+      <metric name="Logged in User Count" indicator="true" template="${RepoServerMgmt}:UserCountNonExpired" />
+      <metric name="Maximum Number of Logged in Users" collectionType="static" template="${RepoServerMgmt}:MaxUsers" />
+      <metric name="Number of Known Users" indicator="true" template="${Authority}:NumberOfUsers" />
+      <metric name="Number of Known Groups" indicator="true" template="${Authority}:NumberOfGroups" />
+      <metric name="Free Memory" indicator="true" units="B" template="${Runtime}:FreeMemory" />
+      <metric name="Total Memory" indicator="true" units="B" template="${Runtime}:TotalMemory" />
+      <metric name="Maximum Memory" indicator="true" units="B" collectionType="static" template="${Runtime}:MaxMemory" />
+      <service name="Connection Pool">
+         <property name="OBJECT_NAME" value="Alfresco:Name=ConnectionPool" />
+         <plugin type="autoinventory" />
+         <properties>
+            <property name="${Database}:DatabaseProductName" description="Database Name" />
+            <property name="${Database}:DatabaseProductVersion" description="Database Version" />
+            <property name="${Database}:DriverName" description="JDBC Driver Name" />
+            <property name="${Database}:DriverVersion" description="JDBC Driver Version" />
+            <property name="DriverClassName" description="JDBC Driver Class" />
+            <property name="Url" description="JDBC Connection URL" />
+            <property name="${Database}:UserName" description="Database User Name" />
+            <property name="DefaultTransactionIsolation" description="Default Transaction Isolation" />
+            <property name="InitialSize" description="Initial Number of Connections" />
+            <property name="MaxActive" description="Maximum Number of Active Connections" />
+            <property name="MaxIdle" description="Maximum Number of Idle Connections" />
+            <property name="MaxWait" description="Maximum Wait for a Connection" />
+            <property name="MinEvictableIdleTimeMillis" description="Minimum Idle Time" />
+            <property name="MinIdle" description="Minimum Number of Idle Connections" />
+            <property name="RemoveAbandoned" description="Remove Abandoned Connections?" />
+            <property name="RemoveAbandonedTimeout" description="Remove Abandoned Connection Timeout" />
+            <property name="TestOnBorrow" description="Validate Connections Before Borrowing?" />
+            <property name="TestOnReturn" description="Validate Connections Before Returning?" />
+            <property name="TestWhileIdle" description="Validate Connections Whilst Idle?" />
+            <property name="TimeBetweenEvictionRunsMillis" description="Time Between Eviction Runs" />
+            <property name="ValidationQuery" description="Validation SQL Query" />
+         </properties>
+         <metric name="Availability" indicator="true" />
+         <metric name="Number of Active Connections" indicator="true" template="${OBJECT_NAME}:NumActive" />
+         <metric name="Number of Idle Connections" indicator="true" template="${OBJECT_NAME}:NumIdle" />
+      </service>
+      <service name="CIFS Server">
+         <property name="OBJECT_NAME" value="Alfresco:Name=FileServerConfig" />
+         <plugin type="autoinventory" />
+         <properties>
+            <property name="CIFSServerName" description="Name" />
+            <property name="CIFSServerAddress" description="Address" />
+         </properties>
+         <metric name="Availability" indicator="true" template="${OBJECT_NAME}:CIFSServerEnabled" />
+      </service>
+      <service name="FTP Server">
+         <property name="OBJECT_NAME" value="Alfresco:Name=FileServerConfig" />
+         <plugin type="autoinventory" />
+         <metric name="Availability" indicator="true" template="${OBJECT_NAME}:FTPServerEnabled" />
+      </service>
+      <service name="NFS Server">
+         <property name="OBJECT_NAME" value="Alfresco:Name=FileServerConfig" />
+         <plugin type="autoinventory" />
+         <metric name="Availability" indicator="true" template="${OBJECT_NAME}:NFSServerEnabled" />
+      </service>
+      <service name="Lucene Index">
+         <property name="OBJECT_NAME" value="Alfresco:Name=LuceneIndexes,Index=*" />
+         <config>
+            <option name="Index" description="Index Name" />
+         </config>
+         <plugin type="autoinventory" />
+         <metric name="Availability" indicator="true" />
+         <metric name="Number Of Indexed Fields" collectionType="static" />
+         <metric name="Number Of Fields" collectionType="static" />
+         <metric name="Number Of Documents" indicator="true" />
+         <metric name="Actual Size" indicator="true" units="B" />
+         <metric name="Used Size" units="B" />
+      </service>
+      <service name="Content Store">
+         <property name="OBJECT_NAME" value="Alfresco:Name=ContentStore,Type=*,Root=*" />
+         <config>
+            <option name="Type" description="Content Store Type" />
+            <option name="Path" description="Content Store Path" />
+         </config>
+         <plugin type="autoinventory" />
+         <metric name="Availability" indicator="true" template="${OBJECT_NAME}:WriteSupported" />
+         <metric name="Space Total" indicator="true" units="B" />
+         <metric name="Space Free" indicator="true" units="B" />		 
+      </service>
+      <service name="Content Transformer">
+         <property name="OBJECT_NAME" value="Alfresco:Name=ContentTransformer,Type=*," />
+         <config>
+            <option name="Type" description="Content Transformer Type" />
+         </config>
+         <plugin type="autoinventory" />
+         <properties>
+            <property name="VersionString" description="Version String" />
+         </properties>
+         <metric name="Availability" indicator="true" template="${OBJECT_NAME}:Available" />
+      </service>
+      <service name="Open Office">
+         <property name="OBJECT_NAME" value="Alfresco:Name=OpenOffice" />
+         <plugin type="autoinventory" />
+         <properties>
+            <property name="ooName" description="Product Name" />
+            <property name="ooSetupVersionAboutBox" description="Version String" />
+         </properties>
+         <metric name="Availability" indicator="true" template="${OBJECT_NAME}:available" />
+      </service>
+      <service name="Hibernate Session Factory">
+         <property name="OBJECT_NAME" value="Alfresco:Name=Hibernate" />
+         <plugin type="autoinventory" />
+         <metric name="Availability" indicator="true" />
+         <metric name="Entity Insert Count" template="${OBJECT_NAME}:EntityInsertCount" category="THROUGHPUT"
+            indicator="true" collectionType="trendsup" />
+         <metric name="Query Execution Max Time" template="${OBJECT_NAME}:QueryExecutionMaxTime" category="PERFORMANCE"
+            indicator="true" units="ms" />
+         <metric name="Entity Update Count" template="${OBJECT_NAME}:EntityUpdateCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Collection Update Count" template="${OBJECT_NAME}:CollectionUpdateCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Entity Load Count" template="${OBJECT_NAME}:EntityLoadCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Entity Fetch Count" template="${OBJECT_NAME}:EntityFetchCount" category="THROUGHPUT"
+            indicator="true" collectionType="trendsup" />
+         <metric name="Entity Delete Count" template="${OBJECT_NAME}:EntityDeleteCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Collection Recreate Count" template="${OBJECT_NAME}:CollectionRecreateCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Query Execution Count" template="${OBJECT_NAME}:QueryExecutionCount" category="THROUGHPUT"
+            indicator="true" collectionType="trendsup" />
+         <metric name="Flush Count" template="${OBJECT_NAME}:FlushCount" category="THROUGHPUT" collectionType="trendsup" />
+         <metric name="Collection Load Count" template="${OBJECT_NAME}:CollectionLoadCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Successful Transaction Count" template="${OBJECT_NAME}:SuccessfulTransactionCount"
+            category="THROUGHPUT" collectionType="trendsup" />
+         <metric name="Query Cache Hit Count" template="${OBJECT_NAME}:QueryCacheHitCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Collection Remove Count" template="${OBJECT_NAME}:CollectionRemoveCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Connect Count" template="${OBJECT_NAME}:ConnectCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Start Time" template="${OBJECT_NAME}:StartTime" category="AVAILABILITY" units="epoch-millis"
+            collectionType="static" />
+         <metric name="Second Level Cache Put Count" template="${OBJECT_NAME}:SecondLevelCachePutCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Query Cache Put Count" template="${OBJECT_NAME}:QueryCachePutCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Session Open Count" template="${OBJECT_NAME}:SessionOpenCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Transaction Count" template="${OBJECT_NAME}:TransactionCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Collection Fetch Count" template="${OBJECT_NAME}:CollectionFetchCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Session Close Count" template="${OBJECT_NAME}:SessionCloseCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Query Cache Miss Count" template="${OBJECT_NAME}:QueryCacheMissCount" category="THROUGHPUT"
+            collectionType="trendsup" />
+         <metric name="Second Level Cache Miss Count" template="${OBJECT_NAME}:SecondLevelCacheMissCount"
+            category="THROUGHPUT" collectionType="trendsup" />
+         <help>
+  <![CDATA[
+See Hibernate's doc: <a href="http://www.hibernate.org/216.html">Publishing statistics through JMX</a>
+]]>
+         </help>
+      </service>
+   </server>
+</plugin>
