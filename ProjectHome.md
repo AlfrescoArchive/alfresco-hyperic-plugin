@@ -1,0 +1,1 @@
+This is the home of the Alfresco Hyperic Plugin.  The plugin is unsupported by Alfresco. The last known version of Alfresco that this was known to work on was Alfresco 3.4
